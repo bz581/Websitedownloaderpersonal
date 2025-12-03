@@ -77,6 +77,28 @@ Run the small integration test which downloads `https://example.com`:
 PYTHONPATH=src pytest -q
 ```
 
+## Pushing changes to GitHub
+
+To commit and push your changes:
+
+```bash
+# Stage all changes
+git add -A
+
+# Commit with a message
+git commit -m "Your commit message here"
+
+# Push to GitHub
+git push
+```
+
+Example:
+```bash
+git add -A
+git commit -m "Add custom filename support"
+git push
+```
+
 ## Project layout
 
 - `src/downloader/downloader.py` — Core downloader class
