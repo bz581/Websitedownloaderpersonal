@@ -64,12 +64,13 @@ class Downloader:
         parser = self._get_robots_parser(root)
         return parser.can_fetch(self.user_agent, url)
 
-    def fetch(self, url: str, render_js: bool = False, save_assets: bool = False, rewrite_assets: bool = True, progress_callback=None) -> Path:
+    def fetch(self, url: str, render_js: bool = False, save_assets: bool = False, rewrite_assets: bool = True, custom_filename: str = None, progress_callback=None) -> Path:
         """Fetch a URL and save the result to disk.
 
         If render_js is True Playwright will be used to render the page content. If
         save_assets is True the downloader will parse and try to fetch simple static assets
-        (images, stylesheets, scripts). progress_callback will be called with event dicts.
+        (images, stylesheets, scripts). custom_filename allows specifying the output filename.
+        progress_callback will be called with event dicts.
         """
         if not self.allowed_by_robots(url):
             raise PermissionError("Fetching disallowed by robots.txt")
@@ -152,10 +153,18 @@ class Downloader:
                 raise RuntimeError("Failed to download after 8 attempts")
 
         # save main HTML
-        parsed = urllib.parse.urlparse(url)
-        safe_host = parsed.netloc.replace(":", "_")
-        safe_path = parsed.path.strip("/") or "index"
-        filename = self.output_dir / f"{safe_host}_{safe_path}.html"
+        if custom_filename:
+            # Use custom filename if provided
+            filename = self.output_dir / custom_filename
+            if not filename.suffix:
+                filename = filename.with_suffix('.html')
+        else:
+            # Auto-generate filename from URL
+            parsed = urllib.parse.urlparse(url)
+            safe_host = parsed.netloc.replace(":", "_")
+            safe_path = parsed.path.strip("/") or "index"
+            filename = self.output_dir / f"{safe_host}_{safe_path}.html"
+        
         filename = Path(str(filename))
         filename.parent.mkdir(parents=True, exist_ok=True)
         filename.write_text(content, encoding="utf-8")

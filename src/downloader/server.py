@@ -109,6 +109,7 @@ def index(request: Request):
 def download(
     request: Request,
     url: str = Form(...),
+    filename: Optional[str] = Form(None),
     title: Optional[str] = Form(None),
     render_js: str = Form("false"),
     save_assets: str = Form("false"),
@@ -181,7 +182,7 @@ def download(
 
     # Single page download
     try:
-        saved = d.fetch(url, render_js=render_js_bool, save_assets=save_assets_bool, progress_callback=progress_callback)
+        saved = d.fetch(url, render_js=render_js_bool, save_assets=save_assets_bool, custom_filename=filename, progress_callback=progress_callback)
     except Exception as exc:
         tmpdir.cleanup()
         logger.exception("Download failed: %s", exc)
