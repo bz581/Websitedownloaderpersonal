@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Website Downloader</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      h1 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+        color: #333;
+      }
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 0.95rem;
+      }
+      .section {
+        margin-bottom: 25px;
+      }
+      .section-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #555;
+        margin-bottom: 6px;
+      }
+      input, select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        font-family: inherit;
+      }
+      input:focus, select:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      button.secondary {
+        background: #6c757d;
+        margin-top: 12px;
+        width: auto;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+      }
+      button.secondary:hover {
+        background: #5a6268;
+      }
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+      }
+      .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .modal-header {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      .modal-close {
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        color: #aaa;
+        cursor: pointer;
+        line-height: 20px;
+      }
+      .modal-close:hover {
+        color: #000;
+      }
+      .divider {
+        margin: 25px 0;
+        border-top: 1px solid #eee;
+      }
+      .footer {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 20px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📥 Website Downloader</h1>
+      <p class="subtitle">Download any website for offline viewing</p>
+
+      <form id="download-form" method="post" action="/download" enctype="multipart/form-data">
+        
+        <!-- Basic Section -->
+        <div class="section">
+          <div class="section-title">URL</div>
+          <label for="url">Website URL</label>
+          <input id="url" name="url" type="text" placeholder="https://example.com" required />
+        </div>
+
+        <!-- Download Options -->
+        <div class="section">
+          <div class="section-title">Download Options</div>
+          
+          <label for="render_js">Render JavaScript</label>
+          <select id="render_js" name="render_js">
+            <option value="false">No (faster)</option>
+            <option value="true">Yes (with Playwright)</option>
+          </select>
+
+          <label for="save_assets">Save images & stylesheets</label>
+          <select id="save_assets" name="save_assets">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+
+          <label for="respect_robots">Respect robots.txt</label>
+          <select id="respect_robots" name="respect_robots">
+            <option value="true">Yes (recommended)</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+
+        <input type="hidden" name="start_type" value="download" />
+        <input type="hidden" name="depth" value="1" />
+        <input type="hidden" name="max_pages" value="1" />
+        <input type="hidden" name="concurrency" value="1" />
+        <input type="hidden" name="warc" value="false" />
+
+        <button type="button" class="secondary" id="advanced-btn">⚙️ Advanced Options</button>
+        <button type="submit">Download</button>
+      </form>
+
+      <div class="footer">
+        This service respects robots.txt and is intended for legal, ethical use only.
+      </div>
+    </div>
+
+    <!-- Advanced Options Modal -->
+    <div id="advanced-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close" id="modal-close">&times;</span>
+        <div class="modal-header">Advanced Options</div>
+        
+        <label for="include">Include URLs matching (regex)</label>
+        <input id="include" name="include" type="text" placeholder="e.g., /articles/" />
+
+        <label for="exclude">Exclude URLs matching (regex)</label>
+        <input id="exclude" name="exclude" type="text" placeholder="e.g., /logout" />
+
+        <label for="proxy">Proxy URL</label>
+        <input id="proxy" name="proxy" type="text" placeholder="http://127.0.0.1:8080" />
+
+        <label for="auth_user">Username (if required)</label>
+        <input id="auth_user" name="auth_user" type="text" />
+
+        <label for="auth_pass">Password (if required)</label>
+        <input id="auth_pass" name="auth_pass" type="password" />
+        
+        <button type="button" class="secondary" id="modal-close-btn" style="width: 100%; margin-top: 20px;">Close</button>
+      </div>
+    </div>
+
+    <script>
+      // Modal functionality
+      const modal = document.getElementById('advanced-modal');
+      const advancedBtn = document.getElementById('advanced-btn');
+      const modalCloseBtn = document.getElementById('modal-close-btn');
+      const modalCloseX = document.getElementById('modal-close');
+
+      // Open modal
+      advancedBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+      });
+
+      // Close modal on close button
+      modalCloseBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+
+      // Close modal on X button
+      modalCloseX.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+
+      // Close modal when clicking outside (on the background)
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+
+      // Save form settings to localStorage
+      const form = document.getElementById('download-form');
+      const inputs = form.querySelectorAll('input, select');
+
+      // Load saved settings on page load
+      window.addEventListener('load', () => {
+        inputs.forEach(input => {
+          const saved = localStorage.getItem(input.id);
+          if (saved && input.id !== 'url') {  // Don't restore URL for privacy
+            input.value = saved;
+          }
+        });
+      });
+
+      // Save settings whenever they change
+      inputs.forEach(input => {
+        input.addEventListener('change', () => {
+          localStorage.setItem(input.id, input.value);
+        });
+      });
+    </script>
+  </body>
+</html>
