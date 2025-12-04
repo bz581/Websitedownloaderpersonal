@@ -154,16 +154,19 @@ class Downloader:
 
         # save main HTML
         if custom_filename:
-            # Use custom filename if provided
             filename = self.output_dir / custom_filename
+            # Only add .html if no extension provided
             if not filename.suffix:
                 filename = filename.with_suffix('.html')
         else:
-            # Auto-generate filename from URL
             parsed = urllib.parse.urlparse(url)
             safe_host = parsed.netloc.replace(":", "_")
             safe_path = parsed.path.strip("/") or "index"
-            filename = self.output_dir / f"{safe_host}_{safe_path}.html"
+            # Preserve URL extension, otherwise add .html
+            if "." in safe_path:
+                filename = self.output_dir / f"{safe_host}_{safe_path}"
+            else:
+                filename = self.output_dir / f"{safe_host}_{safe_path}.html"
         
         filename = Path(str(filename))
         filename.parent.mkdir(parents=True, exist_ok=True)
